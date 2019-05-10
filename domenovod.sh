@@ -55,13 +55,13 @@ get_domain_controller_address(){
 		# timeout 2 because nmblookup is fast when address is correct and is too slow otherwise
 		AD_server="$(timeout 2 nmblookup -A "$nameserver_line" | head -n 2 | tail -n 1 | cut -f2 | cut -d ' ' -f1)"
 		if [ -n "$AD_server" ]; then
-			if check_reachability "$AD_server"
-				then DC_server="$AD_server"
-				else
-					if check_reachability "${AD_server}.${hostdomain}"; then
-						DC_server="${AD_server}.${hostdomain}"
-					fi
-			fi
+			for i in "${AD_server}.${hostdomain}" "${AD_server}"
+			do
+				if check_reachability "$i"; then
+					DC_server="$i"
+					break
+				fi
+			done
 			echo "$DC_server"
 			return
 		fi
