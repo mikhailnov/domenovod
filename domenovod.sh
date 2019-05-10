@@ -73,3 +73,14 @@ get_domain_controller_address(){
 	
 }
 
+while [ -n "$1" ]
+do
+	case "$1" in
+		check_reachability ) shift; check_reachability "$1" ;;
+		get_hostname ) get_hostname ;;
+		check_hostname_is_fqdn ) check_hostname_is_fqdn ;;
+		get_domain_controller_address ) get_domain_controller_address ;;
+		* ) : ;;
+	esac
+	shift
+done
