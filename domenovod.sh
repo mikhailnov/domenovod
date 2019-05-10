@@ -52,8 +52,8 @@ get_domain_controller_address(){
 	# Try to guess DC address by IP address (assume that DC is normally a DNS server)
 	while read -r nameserver_line
 	do
-		# timeout 2 because nmblookup is fast when address is correct and is too slow otherwise
-		AD_server="$(timeout 2 nmblookup -A "$nameserver_line" | head -n 2 | tail -n 1 | cut -f2 | cut -d ' ' -f1)"
+		while read -r AD_server
+		do
 		if [ -n "$AD_server" ]; then
 			for i in "${AD_server}.${hostdomain}" "${AD_server}"
 			do
@@ -65,6 +65,10 @@ get_domain_controller_address(){
 			echo "$DC_server"
 			return
 		fi
+		# timeout 2 because nmblookup is fast when address is correct and is too slow otherwise
+		# awk '!x[$0]++' removes duplicates without sorting, https://stackoverflow.com/a/11532197
+		# We don't need to sort found DC servers (assume the the first one must have the highest priority)
+		done < <(timeout 2 nmblookup -A "$nameserver_line" | tail -n +2 | awk '{print $1}' | awk '!x[$0]++')
 	done < <(grep ^nameserver /etc/resolv.conf | awk '{print $2}')
 	
 }
